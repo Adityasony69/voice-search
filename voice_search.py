@@ -1,4 +1,4 @@
-"""Hold Right Ctrl, speak, let go -> your words go into Windows search.
+"""Hold Left Ctrl, speak, let go -> your words go into Windows search.
 
 Runs fully offline with faster-whisper. Press Esc twice quickly to quit.
 """
@@ -11,7 +11,7 @@ from faster_whisper import WhisperModel
 from pynput import keyboard
 
 # ---- settings ----
-HOTKEY = keyboard.Key.ctrl_r   # hold this key to talk
+HOTKEY = keyboard.Key.ctrl_l   # hold this key to talk
 MODEL_SIZE = "base.en"         # tiny.en (fastest) / base.en / small.en (most accurate)
 PRESS_ENTER = True             # press Enter after typing the text
 SAMPLE_RATE = 16000            # whisper expects 16 kHz mono
@@ -86,7 +86,7 @@ def main():
     global stream
     stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", callback=on_audio)
     stream.start()
-    print("Ready. Hold Right Ctrl and speak. Double-tap Esc to quit.")
+    print("Ready. Hold Left Ctrl and speak. Double-tap Esc to quit.")
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
     stream.stop()
