@@ -65,6 +65,11 @@ def on_press(key):
         chunks.clear()
         recording = True
         print("Listening...")
+    elif recording and key != HOTKEY:
+        # ctrl + some other key = normal shortcut (ctrl+c etc), not voice
+        recording = False
+        chunks.clear()
+        print("  (shortcut, cancelled)")
     elif key == keyboard.Key.esc:
         now = time.time()
         if now - last_esc < 0.5:
