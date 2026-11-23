@@ -1,4 +1,4 @@
-"""Hold Left Ctrl, speak, let go -> your words go into Windows search.
+"""Hold Ctrl (or Copilot key), speak, let go -> your words go into Windows search.
 
 Runs fully offline with faster-whisper. Press Esc twice quickly to quit.
 """
@@ -11,7 +11,8 @@ from faster_whisper import WhisperModel
 from pynput import keyboard
 
 # ---- settings ----
-HOTKEY = keyboard.Key.ctrl_l   # hold this key to talk
+# hold either ctrl to talk (copilot key is remapped to right ctrl in powertoys)
+HOTKEYS = {keyboard.Key.ctrl_l, keyboard.Key.ctrl_r, keyboard.Key.ctrl}
 MODEL_SIZE = "base.en"         # tiny.en (fastest) / base.en / small.en (most accurate)
 PRESS_ENTER = True             # press Enter after typing the text
 SAMPLE_RATE = 16000            # whisper expects 16 kHz mono
@@ -61,11 +62,11 @@ def handle(audio):
 
 def on_press(key):
     global recording, last_esc
-    if key == HOTKEY and not recording:
+    if key in HOTKEYS and not recording:
         chunks.clear()
         recording = True
         print("Listening...")
-    elif recording and key != HOTKEY:
+    elif recording and key not in HOTKEYS:
         # ctrl + some other key = normal shortcut (ctrl+c etc), not voice
         recording = False
         chunks.clear()
@@ -80,7 +81,7 @@ def on_press(key):
 
 def on_release(key):
     global recording
-    if key == HOTKEY and recording:
+    if key in HOTKEYS and recording:
         recording = False
         audio = np.concatenate(chunks).flatten() if chunks else np.zeros(0, np.float32)
         # do the slow work off the keyboard thread so keys don't lag
@@ -91,7 +92,7 @@ def main():
     global stream
     stream = sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32", callback=on_audio)
     stream.start()
-    print("Ready. Hold Left Ctrl and speak. Double-tap Esc to quit.")
+    print("Ready. Hold Ctrl (or Copilot key) and speak. Double-tap Esc to quit.")
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
     stream.stop()
