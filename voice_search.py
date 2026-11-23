@@ -1,4 +1,4 @@
-"""Hold Right Ctrl, speak, let go -> prints what you said.
+"""Hold Right Ctrl, speak, let go -> your words go into Windows search.
 
 Runs fully offline with faster-whisper. Press Esc twice quickly to quit.
 """
@@ -13,12 +13,14 @@ from pynput import keyboard
 # ---- settings ----
 HOTKEY = keyboard.Key.ctrl_r   # hold this key to talk
 MODEL_SIZE = "base.en"         # tiny.en (fastest) / base.en / small.en (most accurate)
+PRESS_ENTER = True             # press Enter after typing the text
 SAMPLE_RATE = 16000            # whisper expects 16 kHz mono
 MIN_SECONDS = 0.4              # ignore taps shorter than this
 
 print(f"Loading Whisper model '{MODEL_SIZE}' (first run downloads it)...")
 model = WhisperModel(MODEL_SIZE, device="cpu", compute_type="int8")
 
+typer = keyboard.Controller()
 chunks = []
 recording = False
 stream = None
@@ -35,6 +37,15 @@ def transcribe(audio):
     return " ".join(s.text.strip() for s in segments).strip()
 
 
+def search_windows(text):
+    typer.tap(keyboard.Key.cmd)   # open Start / search
+    time.sleep(0.6)               # give the search box time to appear
+    typer.type(text)
+    if PRESS_ENTER:
+        time.sleep(0.4)
+        typer.tap(keyboard.Key.enter)
+
+
 def handle(audio):
     if len(audio) < SAMPLE_RATE * MIN_SECONDS:
         print("  (too short, ignored)")
@@ -45,6 +56,7 @@ def handle(audio):
         print("  (heard nothing)")
         return
     print(f"  heard: {text!r}  [{time.time() - start:.1f}s]")
+    search_windows(text.rstrip("."))
 
 
 def on_press(key):
